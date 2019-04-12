@@ -1,0 +1,13 @@
+{
+    "steps": [
+        {
+            "id": 0,
+            "question":"What is the safe word?",
+            "answer": "horseshoe",
+            "action": {
+                "type": "webhook",
+                "data": "URL"
+            } 
+        }
+    ]
+}
