@@ -3,11 +3,28 @@
         {
             "id": 0,
             "question":"What is the safe word?",
-            "answer": "horseshoe",
+            "answer": {
+                "type": "text",
+                "content": "horseshoe"
+            },
             "action": {
                 "type": "webhook",
                 "data": "URL"
-            } 
+            },
+            "hint": ""
+        },
+        {
+            "id": 1,
+            "question":"It may not be 20,000 leagues under the sea, but it is definitely a journey to the centre of Zuerich...",
+            "answer": {
+                "type": "gps",
+                "content": ""
+            },
+            "action": {
+                "type": "webhook",
+                "data": "URL"
+            },
+            "hint": "https://www.google.com/maps/dir//Jules+Verne,+Uraniastrasse+9,+8001+Z%C3%BCrich/@47.374437,8.5372483,17z/data=!4m8!4m7!1m0!1m5!1m1!1s0x47900a0656c3a4ad:0x118ad066cac744d3!2m2!1d8.539437!2d47.374437?hl=en" 
         }
     ]
 }

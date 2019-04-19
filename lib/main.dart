@@ -1,10 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
-import './utils.dart';
+import './utils.dart' as utils;
+import './bdaycheck.dart' as bday;
 
 void main() async {
-  Map steps = await loadSteps();
-  runApp(Martin(steps: steps));
+  Map steps = await utils.loadSteps();
+  utils.getLiveLocation().onData((data) {
+    print(data);
+  });
+  runApp(MartinApp(steps: steps));
 }
 
 class MartinApp extends StatefulWidget {
@@ -21,10 +27,19 @@ class _MartinState extends State<MartinApp> {
 
 
   _MartinState(this.steps);
+
+  var now = new DateTime.now();
+  var bDay = new DateTime(2019,5,6);
+  
   
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    Widget page = StepPage(steps: this.steps, idx: 0);
+    // if(bDay.difference(now).inDays > 0) {
+      // page = bday.PrebdayPage(); 
+    // }
+    
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -39,71 +54,77 @@ class _MartinState extends State<MartinApp> {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: page,
     );
   }
 }
 
 class StepPage extends StatefulWidget {
 
+  final Map steps;
+  final int idx = 0;
+  StepPage({Map steps, int idx}) : this.steps = steps;
+
   @override
-  _StepPageState createState() => _StepPageState();
+  _StepPageState createState() => _StepPageState(steps, idx);
 }
 
 class _StepPageState extends State<StepPage> {
 
-  @override
-  Widget build(BuildContext context) {
+  Map steps;
+  int idx;
+  String answer = "";
+  String answerStatus;
 
-    return null;
+  _StepPageState(this.steps, this.idx);
+
+  void _incIndex() {
+    var step = this.steps['steps'][this.idx];
+    
+    var rightAns = false;
+    switch (step['answer']['type']) {
+        case 'text':
+          print(step['answer']['content']);
+          if(this.answer.toLowerCase() == step['answer']['content'].toString().toLowerCase()) {
+              print('NAILED IT');
+              rightAns = true;
+          }
+          break;
+        case 'gps':
+          break;
+        default:
+          break;
+    }
+    
+    if (rightAns) {
+      // TODO check if at last step
+      setState(() {
+        this.idx++;
+      });
+    } else {
+      setState(() {
+        this.answerStatus = "Oooof, so close. Maybe? I have no idea what you entered.";        
+      });
+      Timer(new Duration(seconds: 5), () {
+        setState(() {
+          this.answerStatus = null;
+        });
+        
+      });
+    }
   }
-}
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
+  void _setAnswer(String input) {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      this.answer = input;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: Text("Martin's Mystery Menagerie")
       ),
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
@@ -125,21 +146,38 @@ class _MyHomePageState extends State<MyHomePage> {
           // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
+            TextField(
+              decoration: InputDecoration(
+                labelText:this.steps['steps'][this.idx]['question'] 
+              )
+              
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
+            TextField(
+              onChanged: (text) {
+                _setAnswer(text);
+              },
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.teal)
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.red)
+                ),
+                hintText: "Well, what is it? Tell me here!",
+                errorText: answerStatus
+              ),
             ),
+            
+            
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
+        onPressed: _incIndex,
+        tooltip: 'I think I know...',
+        child: Icon(Icons.forward),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
+
