@@ -2,7 +2,11 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import 'package:url_launcher/url_launcher.dart';
+
 class PrebdayPage extends StatelessWidget {
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -43,13 +47,10 @@ class PrebdayPage extends StatelessWidget {
             Text(
               preChecks[rand.nextInt(preChecks.length-1)]
             ),
-            EditableText(
-              controller: TextEditingController(),
-              focusNode: FocusNode(),
-              cursorColor: Colors.white,
-              backgroundCursorColor: Colors.black,
-              style: Theme.of(context).textTheme.display1,
-            ),
+            InkWell(
+              child: new Text('Update Here First!'),
+              onTap: () => launch('https://annikamart.in/downloads/martin.apk')
+          ),
             
           ],
         ),

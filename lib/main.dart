@@ -36,12 +36,12 @@ class _MartinState extends State<MartinApp> {
   @override
   Widget build(BuildContext context) {
     Widget page = StepPage(steps: this.steps, idx: 0);
-    // if(bDay.difference(now).inDays > 0) {
-      // page = bday.PrebdayPage(); 
-    // }
+    if(bDay.difference(now).inDays > 0) {
+      page = bday.PrebdayPage(); 
+    }
     
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Martin',
       theme: ThemeData(
         // This is the theme of your application.
         //
