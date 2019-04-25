@@ -1,15 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 
 import './utils.dart' as utils;
 import './bdaycheck.dart' as bday;
 
 void main() async {
   Map steps = await utils.loadSteps();
-  utils.getLiveLocation().onData((data) {
-    print(data);
-  });
   runApp(MartinApp(steps: steps));
 }
 
@@ -36,9 +34,9 @@ class _MartinState extends State<MartinApp> {
   @override
   Widget build(BuildContext context) {
     Widget page = StepPage(steps: this.steps, idx: 0);
-    if(bDay.difference(now).inDays > 0) {
-      page = bday.PrebdayPage(); 
-    }
+    // if(bDay.difference(now).inDays > 0) {
+    //   page = bday.PrebdayPage(); 
+    // }
     
     return MaterialApp(
       title: 'Martin',
@@ -73,24 +71,31 @@ class _StepPageState extends State<StepPage> {
 
   Map steps;
   int idx;
+  Position currentLoc;
   String answer = "";
   String answerStatus;
+  TextEditingController _ansController = TextEditingController();
+  bool near = true;
 
   _StepPageState(this.steps, this.idx);
 
-  void _incIndex() {
+  Future _incIndex() async {
     var step = this.steps['steps'][this.idx];
     
     var rightAns = false;
-    switch (step['answer']['type']) {
+    var ans = step['answer']['content'];
+    var type = step['answer']['type'];
+    switch (type) {
         case 'text':
           print(step['answer']['content']);
-          if(this.answer.toLowerCase() == step['answer']['content'].toString().toLowerCase()) {
+          if(this._ansController.text.toLowerCase() == ans.toString().toLowerCase()) {
               print('NAILED IT');
               rightAns = true;
           }
           break;
         case 'gps':
+          double distanceInMeters = await Geolocator().distanceBetween(this.currentLoc.latitude, this.currentLoc.latitude, ans['lat'], ans['lng']);
+          
           break;
         default:
           break;
@@ -100,6 +105,12 @@ class _StepPageState extends State<StepPage> {
       // TODO check if at last step
       setState(() {
         this.idx++;
+        this._ansController.text = "";
+        if (type == 'text') {
+          this.near = false;
+        } else {
+          this.near = true;
+        }
       });
     } else {
       setState(() {
@@ -114,51 +125,56 @@ class _StepPageState extends State<StepPage> {
     }
   }
 
-  void _setAnswer(String input) {
+  void _setLoc(Position data) {
     setState(() {
-      this.answer = input;
+      this.currentLoc = data;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+
+    utils.getLiveLocation().onData((data) async {
+      print(data);
+      var ans = this.steps['steps'][this.idx]['answer']['content'];
+      double distanceInMeters = await Geolocator().distanceBetween(this.currentLoc.latitude, this.currentLoc.latitude, ans['lat'], ans['lng']);
+      if(distanceInMeters < 30) {
+        setState(() {
+          this.near = true;
+        });
+      }
+    });
     return Scaffold(
       appBar: AppBar(
         title: Text("Martin's Mystery Menagerie")
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: Column(
-          // Column is also layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            TextField(
-              decoration: InputDecoration(
-                labelText:this.steps['steps'][this.idx]['question'] 
-              )
-              
+            
+            Padding(
+              child: Text(
+                this.steps['steps'][this.idx]['question'],
+                maxLines: null,
+                textAlign: TextAlign.center,
+              ),
+              padding: EdgeInsets.only(bottom: 15.0)
             ),
             TextField(
-              onChanged: (text) {
-                _setAnswer(text);
-              },
+              controller: _ansController,
+              enabled: this.near,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
                   borderSide: BorderSide(color: Colors.teal)
+                ),
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.clear, size: 24.0),
+                  onPressed: () {
+                    setState(() {
+                      this._ansController.text = "";
+                    });
+                  },
                 ),
                 errorBorder: OutlineInputBorder(
                   borderSide: BorderSide(color: Colors.red)
