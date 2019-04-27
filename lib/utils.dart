@@ -1,7 +1,9 @@
 import 'dart:async' show Future, StreamSubscription;
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
  
 Future<String> _loadSteps() async {
   return await rootBundle.loadString('assets/hunt.json');
@@ -31,4 +33,10 @@ StreamSubscription<Position> getLiveLocation() {
 
 Future<double> getDistance(Position p, double destLat, double destLng) async {
   return await Geolocator().distanceBetween(p.latitude, p.longitude, destLat, destLng);
+}
+
+Future nextStep(route, context) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  prefs.setInt("CURRENT_STEP", route);
+  Navigator.pushNamed(context, route);
 }
